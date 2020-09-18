@@ -1,4 +1,4 @@
-* Introduction 
+* Introduction
 
 Injectable is a(nother) lightweight IoC container for Clojure(script).
 
@@ -60,7 +60,7 @@ These are my personal replies to those questions.
 ** Why another DI library?
 There are stablished DI libraries in Clojure. The main ones are Component and
 Integrant. Mount is usually considered a DI library, although it doesn't seem DI
-to me, but a kind of service locator. 
+to me, but a kind of service locator.
 
 The reason to not use any of these three is that the use case of Injectable is
 different: make it as easy as possible the creation of containers with high
@@ -77,11 +77,11 @@ pure functions operating in immutable data. Nevertheless, it's quite typical
 that some parts of the applications depend on state and, unfortunately, the
 common approach is to use that state directly or indirectly in most of the code
 of the application. This is usual the case in parts of the code dealing with
-databases (or files, services, ...) and parts dealing with UI state. 
+databases (or files, services, ...) and parts dealing with UI state.
 
 Injectable offers an alternative solution based in DI which is light enough to
 manage as to offer little overhead while allowing all the code to consist in
-"pure" functions that depend only on their input parameters and nothing else.  
+"pure" functions that depend only on their input parameters and nothing else.
 This makes a huge difference in terms of local reasoning and testability.
 
 ** Why DI at all?
@@ -100,14 +100,14 @@ Pure functions in FP automatically allow for this local reasoning: as long as my
 function doesn't perform any impure operations and, therefore, only uses the
 parameters given to it, then I can reason about it. The only thing that I depend
 on with the rest of the code base is how the codebase is calling my function.
-This is simply a problem of clearly defining the interface. 
+This is simply a problem of clearly defining the interface.
 
 Functions that only depend on their arguments, but allow those arguments to be
 impure (i.e. side effectful) are similar to pure functions in that they allow
 for local reasoning: if called with the same parameters (with the same state, in
 case they are stateful!) then they produce the same result. It's easy to reason
 about those functions and test them. I call these functions "almost pure"
-functions.  
+functions.
 
 Functions that internally are implemented by calling impure functions are
 basically evil and should be avoided at all costs. It's very difficult to reason
@@ -131,8 +131,9 @@ form:
 #+BEGIN_SRC clojure
 (def conf
   {:element1 {:constructor [(fn [] "Value of element1")]
-   :element2 {:constructor [(fn [k] 
-              (str "Element2 references element1, which has a value: ") :element1]})
+   :element2 {:constructor [(fn [k]
+              (str "Element2 references element1, which has a value: ")
+                   :element1]})
 #+END_SRC
 
 Needless to say, this way of defining elements is not practical.
@@ -144,7 +145,8 @@ previous configuration would be expressed as this:
 #+BEGIN_SRC clojure
 (def conf
   {:element1 "Value of element1"]
-   :element2 [str "Element2 references element1, which has a value: " :element1])
+   :element2 [str "Element2 references element1, which has a value: "
+                  :element1])
 #+END_SRC
 
 Another less simplistic example follows:
@@ -157,13 +159,14 @@ Another less simplistic example follows:
    :all-products   [all-products :db-conn '?query] ; (3)
    :delete-product [delete-product :db-conn '?id]
    :my-products    [:all-products [:= :user-products-query]] ; (4)
-   :ui-template    [ui-template :ui-top-bar '?main-content] 
-   :ui-main-page   [:ui-template [:=bean> [ui-main-page-component]]] ; (5)
+   :ui-template    [ui-template :ui-top-bar '?main-content]
+   :ui-main-page   [:ui-template [:=bean> [ui-main-page-component]]]}) ; (5)
 
 ; (1) Simple value
-; (2) Function called on bean refs
-; (3) Function of 1 parameter returned 
-; (4) Literal value, avoid kw lookup
+; (2) Function create-db-conn is called on bean refs :db-user and :db-pass
+; (3) A function of 1 parameter is assigned to :all-products
+; (4) [= x] Notation for literal value, x is passed raw
+;     Note that the bean ref :all-products is on function position
 ; (5) Inner beans: avoid having to define another bean
 #+END_SRC
 
