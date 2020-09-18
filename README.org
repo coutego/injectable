@@ -1,5 +1,4 @@
 * Introduction
-
 Injectable is a(nother) lightweight IoC container for Clojure(script).
 
 It is similar to Integrant in scope. Same as Integrant, it removes some
@@ -13,41 +12,6 @@ for building the objects to be externalised from the configuration of the system
 
 This library takes inspiration in the Spring container. The configurable elements are named
 'beans' in the codebase due to this fact."
-
-
-* Usage
-
-FIXME
-
-The documentation is not yet written. You can find simple (simplistic) examples
-of usage in the tests.
-
-Here below you can find an example taken from an example WIP application where
-Injectable is used as the container:
-
-#+BEGIN_SRC clojure
-(def conf
-  {:main-component [:ui-page-template default-content]
-   ::top-row       [ui-top-row
-                    ::app-icon
-                    ::app-name
-                    ::topbar-center
-                    ::topbar-right
-                    ::on-logo-click]
-   ::app-icon      [:= [:div "*app-icon*"]]
-   ::app-name      [:= [:div "*app-name*"]]
-   ::topbar-center [:= [:div.ui.text.container
-                        [ui-top-row-entry nil [:i.ui.upload.icon] "Upload"]
-                        [ui-top-row-entry nil [:i.ui.clock.icon] "Recent"]
-                        [ui-top-row-entry
-                         nil
-                         [:i.ui.envelope.icon]
-                         "Notifications"
-                         [:span.ui.label {:style {:font-size :xx-small}} 2]]]]
-   ::topbar-right [ui-login-top-row]
-   :ui-page-template [ui-page-template ::top-row '?]})
-#+END_SRC
-
 
 * Why
 This question can mean different things:
@@ -121,7 +85,6 @@ will be passed to our "almost pure" functions.
 
 
 * How
-
 The DI container is extremely minimalist. It's defined in the ~container.cljc~
 file. It uses a very simple, but impractical, format to define "systems". Every
 element (I call them "beans", as a reference to the fabulous Spring container,
@@ -168,6 +131,31 @@ Another less simplistic example follows:
 ; (4) [= x] Notation for literal value, x is passed raw
 ;     Note that the bean ref :all-products is on function position
 ; (5) Inner beans: avoid having to define another bean
+#+END_SRC
+
+Another more complex example taking from a sample web application in development
+
+#+BEGIN_SRC clojure
+(def conf
+  {:main-component   [:ui-page-template default-content]
+   ::top-row         [ui-top-row
+                      ::app-icon
+                      ::app-name
+                      ::topbar-center
+                      ::topbar-right
+                      ::on-logo-click]
+   ::app-icon        [:= [:div "*app-icon*"]]
+   ::app-name        [:= [:div "*app-name*"]]
+   ::topbar-center   [:= [:div.ui.text.container
+                          [ui-top-row-entry nil [:i.ui.upload.icon] "Upload"]
+                          [ui-top-row-entry nil [:i.ui.clock.icon] "Recent"]
+                          [ui-top-row-entry
+                           nil
+                           [:i.ui.envelope.icon]
+                           "Notifications"
+                           [:span.ui.label {:style {:font-size :xx-small}} 2]]]]
+   ::topbar-right    [ui-login-top-row]
+   :ui-page-template [ui-page-template ::top-row '?]})
 #+END_SRC
 
 You get the idea.
