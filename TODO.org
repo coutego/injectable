@@ -1,0 +1,17 @@
+* TODO Add the possibility to stop a "system"
+- Mutators allow to implement initialization code for beans.
+- In order to support cleanup of resources, a stop mechanism (similar to
+  Component or Integrant) is needed.
+- The idea is to define a function which is able to stop the system, for those
+  beans that define a stop function
+** Open points
+1. How to define the stop function?
+   1. Idea: by making the bean implement a protocol (as Component) (-> too restrictive)
+   2. Idea: by introducing some new keyword (e.g. '[:=stop>') in the bean definition
+2. How to store the function in the started container?
+   1. Idea: as metainformation on the system map
+* TODO Improve error handling and reporting
+- Errors are not intuitive
+- It's not trivial to debug a container, especially if hte user doesn't know the
+  details of ~Injectable~.
+
