@@ -1,0 +1,170 @@
+* Introduction 
+
+Injectable is a(nother) lightweight IoC container for Clojure(script).
+
+It is similar to Integrant in scope. Same as Integrant, it removes some
+limitations from Component linked to the decision to favour inmutable records.
+Injectable, like Integrant, doesn't impose this limitation, giving a more natural
+injection mechanism and even allowing for circular dependencies.
+
+Unlike Integrant, the implementation does not depend on multimethods, but in
+plain functions. This is a matter of style and it doesn't prevent the mechanism
+for building the objects to be externalised from the configuration of the system.
+
+This library takes inspiration in the Spring container. The configurable elements are named
+'beans' in the codebase due to this fact."
+
+
+* Usage
+
+FIXME
+
+The documentation is not yet written. You can find simple (simplistic) examples
+of usage in the tests.
+
+Here below you can find an example taken from an example WIP application where
+Injectable is used as the container:
+
+#+BEGIN_SRC clojure
+(def conf
+  {:main-component [:ui-page-template default-content]
+   ::top-row       [ui-top-row
+                    ::app-icon
+                    ::app-name
+                    ::topbar-center
+                    ::topbar-right
+                    ::on-logo-click]
+   ::app-icon      [:= [:div "*app-icon*"]]
+   ::app-name      [:= [:div "*app-name*"]]
+   ::topbar-center [:= [:div.ui.text.container
+                        [ui-top-row-entry nil [:i.ui.upload.icon] "Upload"]
+                        [ui-top-row-entry nil [:i.ui.clock.icon] "Recent"]
+                        [ui-top-row-entry
+                         nil
+                         [:i.ui.envelope.icon]
+                         "Notifications"
+                         [:span.ui.label {:style {:font-size :xx-small}} 2]]]]
+   ::topbar-right [ui-login-top-row]
+   :ui-page-template [ui-page-template ::top-row '?]})
+#+END_SRC
+
+
+* Why
+This question can mean different things:
+- Why another DI library?
+- Why DI in Clojure?
+- Why DI at all?
+
+These are my personal replies to those questions.
+
+** Why another DI library?
+There are stablished DI libraries in Clojure. The main ones are Component and
+Integrant. Mount is usually considered a DI library, although it doesn't seem DI
+to me, but a kind of service locator. 
+
+The reason to not use any of these three is that the use case of Injectable is
+different: make it as easy as possible the creation of containers with high
+number of managed elements. This is needed when embracing DI to its fullest,
+where many or even most functions used in the application are managed via the
+container.
+
+** Why DI in Clojure
+DI is a technique which is used in OO systems. The technique itself is
+not linked to OO and it has a place in FP (see, for example
+https://fsharpforfunandprofit.com/posts/dependency-injection-1/). This technique
+is less relevant in Clojure since most of the application can be implemented as
+pure functions operating in immutable data. Nevertheless, it's quite typical
+that some parts of the applications depend on state and, unfortunately, the
+common approach is to use that state directly or indirectly in most of the code
+of the application. This is usual the case in parts of the code dealing with
+databases (or files, services, ...) and parts dealing with UI state. 
+
+Injectable offers an alternative solution based in DI which is light enough to
+manage as to offer little overhead while allowing all the code to consist in
+"pure" functions that depend only on their input parameters and nothing else.  
+This makes a huge difference in terms of local reasoning and testability.
+
+** Why DI at all?
+In short: local reasoning.
+
+DB people understand the importance of normalization, both in practice as in
+theory (since the concept was first defined mathematically). Normalization is a
+case of a more fundamental principle: Don't Repeat Yourself (DRY).
+
+Local reasoning is an even more general and fundamental principle of
+programming. It consists in having the absolute certainty of the effects of a
+change in the code of configuration, independently of whatever else is done in
+the rest of the codebase.
+
+Pure functions in FP automatically allow for this local reasoning: as long as my
+function doesn't perform any impure operations and, therefore, only uses the
+parameters given to it, then I can reason about it. The only thing that I depend
+on with the rest of the code base is how the codebase is calling my function.
+This is simply a problem of clearly defining the interface. 
+
+Functions that only depend on their arguments, but allow those arguments to be
+impure (i.e. side effectful) are similar to pure functions in that they allow
+for local reasoning: if called with the same parameters (with the same state, in
+case they are stateful!) then they produce the same result. It's easy to reason
+about those functions and test them. I call these functions "almost pure"
+functions.  
+
+Functions that internally are implemented by calling impure functions are
+basically evil and should be avoided at all costs. It's very difficult to reason
+about them, because they are stateful . They are difficult to test and they
+depend on the order of initialization, since calling them produces side effects.
+In my opinion, those functions must be avoided as much as possible.
+
+DI allows us to define all the functions in our codebase to be "almost pure" a
+and be simply left with the problem of using external impure functions, which
+will be passed to our "almost pure" functions.
+
+
+* How
+
+The DI container is extremely minimalist. It's defined in the ~container.cljc~
+file. It uses a very simple, but impractical, format to define "systems". Every
+element (I call them "beans", as a reference to the fabulous Spring container,
+which pioneered the technique in Java) is defined as an entry on a map of the
+form:
+
+#+BEGIN_SRC clojure
+(def conf
+  {:element1 {:constructor [(fn [] "Value of element1")]
+   :element2 {:constructor [(fn [k] 
+              (str "Element2 references element1, which has a value: ") :element1]})
+#+END_SRC
+
+Needless to say, this way of defining elements is not practical.
+
+There is a second way of defining elements, which gets internally translated to
+this simplified form. In this way, vaguely inspired by the Hiccup syntax, the
+previous configuration would be expressed as this:
+
+#+BEGIN_SRC clojure
+(def conf
+  {:element1 "Value of element1"]
+   :element2 [str "Element2 references element1, which has a value: " :element1])
+#+END_SRC
+
+Another less simplistic example follows:
+
+#+BEGIN_SRC clojure
+(def conf
+  {:db-user        "john-doe" ; (1)
+   :db-pass        "hunter2"
+   :db-conn        [create-db-conn :db-user :db-pass] ; (2)
+   :all-products   [all-products :db-conn '?query] ; (3)
+   :delete-product [delete-product :db-conn '?id]
+   :my-products    [:all-products [:= :user-products-query]] ; (4)
+   :ui-template    [ui-template :ui-top-bar '?main-content] 
+   :ui-main-page   [:ui-template [:=bean> [ui-main-page-component]]] ; (5)
+
+; (1) Simple value
+; (2) Function called on bean refs
+; (3) Function of 1 parameter returned 
+; (4) Literal value, avoid kw lookup
+; (5) Inner beans: avoid having to define another bean
+#+END_SRC
+
+You get the idea.
