@@ -1,5 +1,5 @@
 * Introduction
-Injectable is a(nother) lightweight IoC container for Clojure(script).
+Injectable is a(nother) lightweight DI/IoC container for Clojure(script).
 
 It is similar to Integrant in scope. Same as Integrant, it removes some
 limitations from Component linked to the decision to favour inmutable records.
