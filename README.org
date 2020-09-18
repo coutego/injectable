@@ -73,16 +73,28 @@ case they are stateful!) then they produce the same result. It's easy to reason
 about those functions and test them. I call these functions "almost pure"
 functions.
 
-Functions that internally are implemented by calling impure functions are
-basically evil and should be avoided at all costs. It's very difficult to reason
-about them, because they are stateful . They are difficult to test and they
-depend on the order of initialization, since calling them produces side effects.
-In my opinion, those functions must be avoided as much as possible.
+Functions that internally are implemented by calling impure functions themselves are
+basically evil and should be avoided as much as possible. It's very difficult to reason
+about them, because they are stateful . They are difficult to test and they also
+depend on the order of initialization of the different parts of the codebase,
+since calling those parts produce side effects.
 
 DI allows us to define all the functions in our codebase to be "almost pure" a
 and be simply left with the problem of using external impure functions, which
 will be passed to our "almost pure" functions.
 
+The strategy for implementation is, therefore
+1. Check whether you can achieve your objective using pure functions. If so, do
+  it.
+2. Check whether you can achieve your objective using almost pure functions. If
+   so, do it and use DI to inject whatever impure functions are needed as
+   parameters.
+3. If you can't achieve your objective with 1. or 2. then encapsulate your state
+   and external impure functions, exposing the operations to (safely) operate in
+   that state as impure functions to be injected in the normal functions.
+
+This is the most powerful and simple way to allow for local reasoning in
+practice that I know of.
 
 * How
 The DI container is extremely minimalist. It's defined in the ~container.cljc~
