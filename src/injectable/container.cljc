@@ -1,9 +1,6 @@
 (ns injectable.container
-  "An IOC container that is able to build a set of beans out of a definition. Supports constructor
-   and 'setter' injection, through 'mutators'. A 'mutator' is a function that depends on the bean
-   itself and, presumably, modifies it 'in place' when invoked.
-   Constructors are functions that only depend on other beans and are expected to return a built object
-   for the key."
+  "An IOC container that is able to build a set of beans out of a definition expressed
+   as a map."
   (:require [clojure.spec.alpha :as s]))
 
 (s/def ::key keyword?)

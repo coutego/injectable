@@ -1,4 +1,5 @@
 (ns injectable.easy
+  "Easy way to express injectable configurations"
   (:require [clojure.string :as str])
   #?(:clj (:import [clojure.lang ArityException])))
 

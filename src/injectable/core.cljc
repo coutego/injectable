@@ -2,7 +2,7 @@
   "Injectable is a(nother) lightweight IoC container for Clojure(script).
    It is very similar to Integrant in scope. Similar to Integrant, it removes some
    limitations from Component linked to the decision to favour inmutable records.
-   Injectable, like Integrant, doesn't imposo this limitation, giving a more natural
+   Injectable, like Integrant, doesn't impose this limitation, giving a more natural
    injection mechanism and even allowing for circular dependencies.
 
    Unlike Integrant, the implementation does not depend on multimethods, but in

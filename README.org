@@ -22,12 +22,13 @@ This question can mean different things:
 These are my personal replies to those questions.
 
 ** Why another DI library?
-There are stablished DI libraries in Clojure. The main ones are Component and
-Integrant. Mount is usually considered a DI library, although it doesn't seem DI
-to me, but a kind of service locator.
+There are established DI libraries in Clojure. The main ones are Component and
+Integrant. Mount is usually considered a DI library, although it arguably is
+more a kind of service locator rather than DI.
 
-The reason to not use any of these three is that the use case of Injectable is
-different: make it as easy as possible the creation of containers with high
+The reason to not use any of these three is that the problem that Injectable is
+trying to solve is different: 
+make it as easy as possible the creation of containers with high
 number of managed elements. This is needed when embracing DI to its fullest,
 where many or even most functions used in the application are managed via the
 container.
@@ -43,8 +44,8 @@ common approach is to use that state directly or indirectly in most of the code
 of the application. This is usual the case in parts of the code dealing with
 databases (or files, services, ...) and parts dealing with UI state.
 
-Injectable offers an alternative solution based in DI which is light enough to
-manage as to offer little overhead while allowing all the code to consist in
+Injectable offers an alternative solution based in DI which is lightweight
+enough as to offer little overhead while allowing all the code to consist in
 "pure" functions that depend only on their input parameters and nothing else.
 This makes a huge difference in terms of local reasoning and testability.
 
@@ -53,40 +54,42 @@ In short: local reasoning.
 
 DB people understand the importance of normalization, both in practice as in
 theory (since the concept was first defined mathematically). Normalization is a
-case of a more fundamental principle: Don't Repeat Yourself (DRY).
+case of a more fundamental principle: Don't Repeat Yourself (DRY). We all know
+the importance to keep things in one place as to avoid inconsistencies.
 
-Local reasoning is an even more general and fundamental principle of
-programming. It consists in having the absolute certainty of the effects of a
+Same as DRY is a more general case of normalization, local reasoning is an even
+more general and fundamental principle of programming. 
+It consists in having the absolute certainty of the effects of a
 change in the code of configuration, independently of whatever else is done in
 the rest of the codebase.
 
-Pure functions in FP automatically allow for this local reasoning: as long as my
-function doesn't perform any impure operations and, therefore, only uses the
-parameters given to it, then I can reason about it. The only thing that I depend
-on with the rest of the code base is how the codebase is calling my function.
-This is simply a problem of clearly defining the interface.
+Pure functions in FP automatically allow for this local reasoning: as long as a 
+function doesn't perform any impure operations and, therefore, only operates the
+parameters given to it without changing them, then it's possible to reason
+about the function with total independence of the environment this function is
+running it. The only dependency on the environent is how this environment is
+calling the function. But that is for the environment to reason about.
 
 Functions that only depend on their arguments, but allow those arguments to be
 impure (i.e. side effectful) are similar to pure functions in that they allow
 for local reasoning: if called with the same parameters (with the same state, in
 case they are stateful!) then they produce the same result. It's easy to reason
-about those functions and test them. I call these functions "almost pure"
-functions.
+about those functions and test them. We can call this functions "quasipure". 
+Clearly, pure functions are preferrable to quasipure functions, but the latter
+are preferrable to those impure functions that interact with the environment by
+means different that using the arguments passed to them. This includes not only
+functions doing I/O, but also functions accessing global or dynamic variables,
+directly or indirectly calling functions that are impure themselves, etc.
 
-Functions that internally are implemented by calling impure functions themselves are
-basically evil and should be avoided as much as possible. It's very difficult to reason
-about them, because they are stateful . They are difficult to test and they also
-depend on the order of initialization of the different parts of the codebase,
-since calling those parts produce side effects.
+DI allows us to define all the functions in our codebase to be quasipure. This
+allows us to left with the simpler problem of using external impure functions, which
+will be passed to our quasipure functions.
 
-DI allows us to define all the functions in our codebase to be "almost pure" a
-and be simply left with the problem of using external impure functions, which
-will be passed to our "almost pure" functions.
+The strategy for implementation is, therefore:
 
-The strategy for implementation is, therefore
-1. Check whether you can achieve your objective using pure functions. If so, do
+1. Check whether we can achieve our objective using pure functions. If so, do
   it.
-2. Check whether you can achieve your objective using almost pure functions. If
+2. Check whether we can achieve your objective using quasipure functions. If
    so, do it and use DI to inject whatever impure functions are needed as
    parameters.
 3. If you can't achieve your objective with 1. or 2. then encapsulate your state
@@ -145,7 +148,7 @@ Another less simplistic example follows:
 ; (5) Inner beans: avoid having to define another bean
 #+END_SRC
 
-Another more complex example taking from a sample web application in development
+Another more complex example taking from a sample web application currently in development
 
 #+BEGIN_SRC clojure
 (def conf
