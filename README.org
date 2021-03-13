@@ -67,7 +67,7 @@ Pure functions in FP automatically allow for this local reasoning: as long as a
 function doesn't perform any impure operations and, therefore, only operates the
 parameters given to it without changing them, then it's possible to reason
 about the function with total independence of the environment this function is
-running it. The only dependency on the environent is how this environment is
+running in. The only dependency on the environent is how this environment is
 calling the function. But that is for the environment to reason about.
 
 Functions that only depend on their arguments, but allow those arguments to be
